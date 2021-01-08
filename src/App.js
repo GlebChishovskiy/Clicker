@@ -1,34 +1,59 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
-import axios from 'axios'
+import './App.css'
+import React from 'react'
+import Time from './Components/Time'
 
-const Auth = lazy(() => import('./Components/Auth/Auth'))
-const Hello = lazy(() => import('./Components/Hello/Hello'))
-const Profile = lazy(() => import('./Components/Profile/Profile'))
+const DEFAULT_COUNTER_VALUE = 20
 
-const App = () => {
+class App extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      number: 0,
+      time: DEFAULT_COUNTER_VALUE
+    }
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+    this.increment = this.increment.bind(this)
+    this.restart = this.restart.bind(this)
+  }
+  increment() {
+    this.setState(state => ({
+      number: state.number + 1
+    }))
+  }
 
-  const [users, setUsers] = useState()
+  decrement() {
+    if (this.state.time > 0) {
+      this.setState(state => ({
+        time: state.time - 1
+      }))
+    }
+  }
 
-  useEffect(() => {
-    axios.get(`http://localhost:3001/users`).then(({ data }) => {
-      setUsers(data)
+  restart() {
+    this.setState({
+      time: DEFAULT_COUNTER_VALUE,
+      number: 0
     })
-  }, [])
+  }
 
-  return (
-    <Router>
-      <Suspense fallback='Loading...'>
-        <Switch>
-          <Route exact path='/' component={Hello} />
-          <Route path='/auth' render={() => <Auth setIsLoggedIn={setIsLoggedIn} setUsers={setUsers} users={users} />} />
-          <Route path='/profile/:userId?' render={() => <Profile isLoggedIn={isLoggedIn} users={users} />} />
-        </Switch>
-      </Suspense>
-    </Router >
-  )
+  componentDidMount() {
+    this.timer = setInterval(() => this.decrement(), 1000)
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timer)
+  }
+
+  render() {
+    return (
+      <div className="App">
+        <button onClick={this.restart}>RESTART</button>
+        <Time time={this.state.time} />
+        <div>{this.state.number}</div>
+        <button disabled={!this.state.time} onClick={this.increment}>CLICK</button>
+      </div>
+    )
+  }
 }
 
 export default App
